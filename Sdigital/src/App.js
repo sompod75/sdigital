@@ -59,6 +59,16 @@ export default function App() {
   return (
     <ThemeContext.Provider value={th}>
       <AuthContext.Provider value={{ user, login, logout }}>
+        <style>{`
+          * { box-sizing: border-box; }
+          @media (max-width: 640px) {
+            .sd-desktop-nav { display: none !important; }
+            .sd-mobile-nav { display: flex !important; }
+          }
+          @media (max-width: 480px) {
+            h1 { font-size: 24px !important; }
+          }
+        `}</style>
         <div style={{ minHeight: "100vh", background: th.bg, color: th.text, fontFamily: "'Poppins', sans-serif", transition: "background .3s,color .3s" }}>
           <Navbar dark={dark} setDark={setDark} page={page} />
           <div style={{ maxWidth: 1100, margin: "0 auto", padding: "0 16px" }}>
@@ -126,6 +136,7 @@ function StatusBadge({ status }) {
 function Navbar({ dark, setDark, page }) {
   const { acc, card, border, text, sub, navigate, site } = useTheme();
   const { user, logout } = useAuth();
+  const [menuOpen, setMenuOpen] = useState(false);
   return (
     <nav style={{ background: card, borderBottom: `1px solid ${border}`, position: "sticky", top: 0, zIndex: 100, boxShadow: "0 2px 12px rgba(0,0,0,0.06)" }}>
       <div style={{ maxWidth: 1100, margin: "0 auto", padding: "0 16px", display: "flex", alignItems: "center", justifyContent: "space-between", height: 62 }}>
@@ -133,7 +144,8 @@ function Navbar({ dark, setDark, page }) {
           <div style={{ width: 34, height: 34, borderRadius: 9, background: acc, display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontWeight: 900, fontSize: 17 }}>{site.logoLetter}</div>
           <span style={{ fontSize: 17, fontWeight: 800, color: text }}>{site.logoText}</span>
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 4, flexWrap: "wrap" }}>
+        {/* Desktop nav */}
+        <div className="sd-desktop-nav" style={{ display: "flex", alignItems: "center", gap: 4, flexWrap: "wrap" }}>
           {[["হোম","home"],["পণ্য","products"]].map(([l,p]) => (
             <button key={p} onClick={() => navigate(p)} style={{ background: page===p ? acc+"18" : "transparent", border: "none", borderRadius: 8, padding: "7px 13px", cursor: "pointer", color: page===p ? acc : sub, fontWeight: page===p ? 700 : 500, fontSize: 14, fontFamily: "'Poppins',sans-serif" }}>{l}</button>
           ))}
@@ -152,7 +164,41 @@ function Navbar({ dark, setDark, page }) {
           )}
           <button onClick={() => setDark(!dark)} style={{ background: "transparent", border: `1px solid ${border}`, borderRadius: 8, padding: "7px 10px", cursor: "pointer", fontSize: 15 }}>{dark ? "☀️" : "🌙"}</button>
         </div>
+        {/* Mobile right */}
+        <div className="sd-mobile-nav" style={{ display: "none", alignItems: "center", gap: 8 }}>
+          <button onClick={() => setDark(!dark)} style={{ background: "transparent", border: `1px solid ${border}`, borderRadius: 8, padding: "7px 10px", cursor: "pointer", fontSize: 15 }}>{dark ? "☀️" : "🌙"}</button>
+          <button onClick={() => setMenuOpen(!menuOpen)} style={{ background: "transparent", border: `1px solid ${border}`, borderRadius: 8, padding: "7px 12px", cursor: "pointer", fontSize: 18, color: text, fontFamily: "'Poppins',sans-serif" }}>{menuOpen ? "✕" : "☰"}</button>
+        </div>
       </div>
+      {/* Mobile dropdown */}
+      {menuOpen && (
+        <div className="sd-mobile-nav" style={{ display: "block", background: card, borderTop: `1px solid ${border}`, padding: "12px 16px 16px" }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+            {[["হোম","home"],["পণ্য","products"]].map(([l,p]) => (
+              <button key={p} onClick={() => { navigate(p); setMenuOpen(false); }} style={{ background: page===p ? acc+"18" : "transparent", border: "none", borderRadius: 8, padding: "10px 14px", cursor: "pointer", color: page===p ? acc : sub, fontWeight: page===p ? 700 : 500, fontSize: 14, fontFamily: "'Poppins',sans-serif", textAlign: "left" }}>{l}</button>
+            ))}
+            {user ? (
+              <>
+                <button onClick={() => { navigate("orders"); setMenuOpen(false); }} style={{ background: "transparent", border: "none", borderRadius: 8, padding: "10px 14px", cursor: "pointer", color: sub, fontSize: 14, fontFamily: "'Poppins',sans-serif", textAlign: "left" }}>📦 অর্ডার</button>
+                {user.isAdmin && <button onClick={() => { navigate("admin"); setMenuOpen(false); }} style={{ background: "#ef444418", color: "#ef4444", border: "none", borderRadius: 8, padding: "10px 14px", cursor: "pointer", fontWeight: 700, fontSize: 13, fontFamily: "'Poppins',sans-serif", textAlign: "left" }}>⚙️ Admin</button>}
+                <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 14px", background: acc+"15", borderRadius: 10 }}>
+                  <div style={{ width: 28, height: 28, borderRadius: "50%", background: acc, display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontWeight: 700, fontSize: 14 }}>{user.name?.[0]?.toUpperCase()}</div>
+                  <span style={{ fontSize: 14, fontWeight: 600, color: text }}>{user.name}</span>
+                </div>
+                <button onClick={() => { logout(); setMenuOpen(false); }} style={{ background: "transparent", border: `1px solid ${border}`, borderRadius: 8, padding: "10px 14px", cursor: "pointer", color: sub, fontSize: 13, fontFamily: "'Poppins',sans-serif", textAlign: "left" }}>বের হন</button>
+              </>
+            ) : (
+              <button onClick={() => { navigate("login"); setMenuOpen(false); }} style={{ background: acc, border: "none", borderRadius: 10, padding: "11px 14px", cursor: "pointer", color: "#fff", fontSize: 14, fontWeight: 700, fontFamily: "'Poppins',sans-serif" }}>লগইন করুন</button>
+            )}
+          </div>
+        </div>
+      )}
+      <style>{`
+        @media (max-width: 640px) {
+          .sd-desktop-nav { display: none !important; }
+          .sd-mobile-nav { display: flex !important; }
+        }
+      `}</style>
     </nav>
   );
 }
@@ -235,7 +281,7 @@ function ProductPage({ data }) {
   return (
     <div style={{ paddingTop: 32, paddingBottom: 60 }}>
       <button onClick={() => navigate("products")} style={{ background: "transparent", border: `1px solid ${border}`, borderRadius: 8, padding: "8px 16px", cursor: "pointer", color: sub, marginBottom: 24, fontSize: 14, fontFamily: "'Poppins',sans-serif" }}>← ফিরে যান</button>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 32 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(280px,1fr))", gap: 32 }}>
         <div style={{ background: card, border: `1px solid ${border}`, borderRadius: 20, padding: 40, display: "flex", alignItems: "center", justifyContent: "center" }}>
           <BrandLogo p={p} size={130} />
         </div>
@@ -312,12 +358,15 @@ function PaymentPage({ data, method }) {
   const bgClr  = isBkash ? "#fff0f5" : "#fff8f0";
   const number = "01889711012";
 
-  const [form, setForm]       = useState({ senderPhone: "", txId: "" });
+  const [form, setForm]       = useState({ name: "", email: "", phone: "", senderPhone: "", txId: "" });
   const [errors, setErrors]   = useState({});
   const [loading, setLoading] = useState(false);
 
   const validate = () => {
     const e = {};
+    if (!form.name.trim()) e.name = "নাম দিন";
+    if (!/\S+@\S+\.\S+/.test(form.email)) e.email = "সঠিক ইমেইল দিন";
+    if (!form.phone.trim() || form.phone.length < 11) e.phone = "সঠিক ফোন নম্বর দিন";
     if (!form.senderPhone.trim() || form.senderPhone.length < 11) e.senderPhone = "সঠিক নম্বর দিন";
     if (!form.txId.trim()) e.txId = "ট্রানজেকশন আইডি দিন";
     return e;
@@ -329,7 +378,7 @@ function PaymentPage({ data, method }) {
     setLoading(true);
     setTimeout(() => {
       const orders = gs(K.orders, []);
-      orders.push({ id: Date.now(), product: p.name, price: p.price, method: label, senderPhone: form.senderPhone, txId: form.txId, status: "pending", date: new Date().toLocaleString("bn-BD") });
+      orders.push({ id: Date.now(), product: p.name, price: p.price, method: label, name: form.name, email: form.email, phone: form.phone, senderPhone: form.senderPhone, txId: form.txId, status: "pending", date: new Date().toLocaleString("bn-BD") });
       ss(K.orders, orders);
       navigate("success", { product: p });
     }, 1100);
@@ -354,6 +403,9 @@ function PaymentPage({ data, method }) {
       </div>
       <div style={{ background: card, border: `1px solid ${border}`, borderRadius: 20, padding: 24 }}>
         <h3 style={{ fontWeight: 700, marginBottom: 18, fontSize: 16 }}>📋 পেমেন্ট তথ্য দিন</h3>
+        <Field label="আপনার নাম" value={form.name} onChange={v => setForm({ ...form, name: v })} placeholder="পূর্ণ নাম লিখুন" error={errors.name} />
+        <Field label="ইমেইল ঠিকানা" value={form.email} onChange={v => setForm({ ...form, email: v })} placeholder="email@example.com" type="email" error={errors.email} />
+        <Field label="আপনার ফোন নম্বর" value={form.phone} onChange={v => setForm({ ...form, phone: v })} placeholder="01XXXXXXXXX" error={errors.phone} />
         <Field label="যে নম্বর থেকে টাকা পাঠিয়েছেন" value={form.senderPhone} onChange={v => setForm({ ...form, senderPhone: v })} placeholder="01XXXXXXXXX" error={errors.senderPhone} />
         <Field label="ট্রানজেকশন আইডি (TrxID)" value={form.txId} onChange={v => setForm({ ...form, txId: v })} placeholder="যেমন: 8A3FG2HJ9K" error={errors.txId} />
         <Btn label={loading ? "সাবমিট হচ্ছে..." : "✅ অর্ডার কনফার্ম করুন"} onClick={submit} color={color} full disabled={loading} />
@@ -559,7 +611,7 @@ function AdminPage() {
         <div><h2 style={{ fontWeight:800, fontSize:22, marginBottom:3 }}>⚙️ Admin Panel</h2><p style={{ color:sub, fontSize:13, margin:0 }}>S Digital ড্যাশবোর্ড</p></div>
         <button onClick={()=>setPinOK(false)} style={{ background:"#fee2e2", color:"#ef4444", border:"none", borderRadius:8, padding:"8px 16px", cursor:"pointer", fontWeight:700, fontSize:13, fontFamily:"'Poppins',sans-serif" }}>🔒 লক করুন</button>
       </div>
-      <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:14, marginBottom:24 }}>
+      <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(100px,1fr))", gap:14, marginBottom:24 }}>
         {[[`📦`,orders.length,"মোট অর্ডার",acc],[`⏳`,pending.length,"পেন্ডিং","#f59e0b"],[`✅`,confirmed.length,"কনফার্মড","#10b981"]].map(([ic,v,l,c])=>(
           <div key={l} style={{ background:card, border:`1px solid ${border}`, borderRadius:14, padding:"16px 12px", textAlign:"center" }}>
             <div style={{ fontSize:24 }}>{ic}</div>
@@ -582,7 +634,8 @@ function AdminPage() {
               <div style={{ display:"flex", justifyContent:"space-between", flexWrap:"wrap", gap:10 }}>
                 <div>
                   <div style={{ fontWeight:700, fontSize:15, marginBottom:4 }}>{o.product}</div>
-                  <div style={{ color:sub, fontSize:13 }}>💳 {o.method} &nbsp;|&nbsp; 📱 {o.senderPhone}</div>
+                  <div style={{ color:sub, fontSize:13 }}>👤 {o.name} &nbsp;|&nbsp; 📧 {o.email}</div>
+                  <div style={{ color:sub, fontSize:13 }}>💳 {o.method} &nbsp;|&nbsp; 📱 {o.phone || o.senderPhone}</div>
                   <div style={{ color:sub, fontSize:13 }}>🔖 TrxID: <strong>{o.txId}</strong></div>
                   <div style={{ color:sub, fontSize:12, marginTop:3 }}>🕐 {o.date}</div>
                 </div>
@@ -610,7 +663,7 @@ function AdminPage() {
           {showAdd && (
             <div style={{ background:card, border:`2px solid ${acc}`, borderRadius:16, padding:22, marginBottom:20 }}>
               <h3 style={{ fontWeight:700, marginBottom:16, fontSize:16 }}>➕ নতুন পণ্য</h3>
-              <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:12, marginBottom:12 }}>
+              <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(200px,1fr))", gap:12, marginBottom:12 }}>
                 {[["পণ্যের নাম","name"],["লোগো টেক্সট","logoText"],["মূল্য (৳)","price"],["মেয়াদ","duration"],["ব্যাজ","badge"]].map(([l,k])=>(
                   <div key={k}><label style={{ fontSize:12, fontWeight:600, color:sub, display:"block", marginBottom:4 }}>{l}</label><input value={newP[k]} onChange={e=>setNewP({...newP,[k]:e.target.value})} style={inpStyle} /></div>
                 ))}
@@ -628,7 +681,7 @@ function AdminPage() {
               <div key={p.id} style={{ background:card, border:`1px solid ${border}`, borderRadius:14, padding:18 }}>
                 {editId===p.id ? (
                   <div>
-                    <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:12, marginBottom:12 }}>
+                    <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(200px,1fr))", gap:12, marginBottom:12 }}>
                       {[["পণ্যের নাম","name"],["লোগো টেক্সট","logoText"],["মূল্য (৳)","price"],["মেয়াদ","duration"],["ব্যাজ","badge"]].map(([l,k])=>(
                         <div key={k}><label style={{ fontSize:12, fontWeight:600, color:sub, display:"block", marginBottom:4 }}>{l}</label><input value={editF[k]||""} onChange={e=>setEditF({...editF,[k]:e.target.value})} style={inpStyle} /></div>
                       ))}
@@ -665,7 +718,7 @@ function AdminPage() {
       {tab==="site" && (
         <div style={{ background:card, border:`1px solid ${border}`, borderRadius:16, padding:24 }}>
           <h3 style={{ fontWeight:700, marginBottom:20, fontSize:17 }}>⚙️ সাইট সেটিংস</h3>
-          <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:14, marginBottom:16 }}>
+          <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(200px,1fr))", gap:14, marginBottom:16 }}>
             <div><label style={{ fontSize:12, fontWeight:600, color:sub, display:"block", marginBottom:5 }}>সাইটের নাম</label><input value={siteF.logoText} onChange={e=>setSiteF({...siteF,logoText:e.target.value})} style={inpStyle} /></div>
             <div><label style={{ fontSize:12, fontWeight:600, color:sub, display:"block", marginBottom:5 }}>লোগো অক্ষর</label><input value={siteF.logoLetter} onChange={e=>setSiteF({...siteF,logoLetter:e.target.value.slice(0,2)})} maxLength={2} style={inpStyle} /></div>
             <div><label style={{ fontSize:12, fontWeight:600, color:sub, display:"block", marginBottom:5 }}>ট্যাগলাইন</label><input value={siteF.tagline} onChange={e=>setSiteF({...siteF,tagline:e.target.value})} style={inpStyle} /></div>
